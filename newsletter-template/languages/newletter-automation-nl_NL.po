@@ -1,0 +1,42 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Newsletter Template\n"
+"POT-Creation-Date: 2026-11-06 12:00+0100\n"
+"PO-Revision-Date: 2026-11-06 12:05+0100\n"
+"Last-Translator: Yourconn\n"
+"Language-Team: Dutch\n"
+"Language: nl_NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+
+msgid "Add New Newsletter"
+msgstr "Nieuwe nieuwsbrief"
+
+msgid "Newsletter Template Settings"
+msgstr "Nieuwsbrief Template Instellingen"
+
+msgid "Newsletter Template"
+msgstr "Nieuwsbrief Template"
+
+msgid "General Settings"
+msgstr "Algemene Instellingen"
+
+msgid "Target Category"
+msgstr "Doelcategorie"
+
+msgid "Save Settings"
+msgstr "Instellingen opslaan"
+
+msgid "Newsletter "
+msgstr "Nieuwsbrief "
+
+msgid "Select which category should be assigned automatically to the newsletter template drafts."
+msgstr "Selecteer welke categorie automatisch moet worden toegewezen aan de nieuwsbrief-concepten."
+
+msgid "-- Select a Category --"
+msgstr "-- Selecteer een categorie --"
+
+msgid "Failed to auto-create the newsletter template draft."
+msgstr "Het automatisch aanmaken van het nieuwsbrief-concept is mislukt."

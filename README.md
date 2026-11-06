@@ -1,56 +1,59 @@
 # Newsletter Template
 
-A lightweight WordPress plugin that automatically injects a predefined 1/3 and 2/3 column layout template into the Gutenberg block editor when a specific post category is selected.
+A custom, robust WordPress plugin designed specifically for the **YourConn Child Theme** powered by the **Enfold Avia Advanced Layout Builder Framework**. 
+
+Instead of relying on the Gutenberg block editor, this plugin hooks directly into Enfold's internal builder pipeline to instantly generate pre-formatted multi-column layouts for newsletters using native Avia shortcodes.
+
+## Compatibility Notice
+
+> [!IMPORTANT]
+> **Requirements:** This plugin is uniquely architecturalized for environments running the **Avia Advanced Layout Builder (Enfold Framework)**. It will not execute layout injections on themes using the default WordPress block editor (Gutenberg) or other page builders.
 
 ## Features
 
-- **Automated Content Injection:** Detects when a configured category (e.g., "Newsletter") is selected in a new post and instantly populates the editor with a complete newsletter skeleton structure.
-- **Configurable Settings UI:** Easily choose which WordPress category triggers the template injection directly from the WordPress Admin dashboard (**Settings > Newsletter Template**).
-- **Optimized Layout Block Structure:** Injects a top introduction paragraph followed by 5 rows of perfectly formatted asymmetric columns (33.33% / 66.66% flex-basis distribution).
-- **Asymmetric Core Block Setup:** Pre-configures a dedicated Image placeholder on the left and a Heading block (with `0px` top-margin override) alongside a clean paragraph structure on the right.
-- **Clean Architecture:** Separates backend configurations from editor assets using proper `is_admin()` conditional checks to keep your website fast and production-efficient.
+- **Direct Layout Generation:** Instantly provisions a new post draft pre-populated with a 1/3 and 2/3 asymmetric Avia grid structure upon clicking the sidebar menu shortcut.
+- **Automated Mode Enforcement:** Utilizes the custom Enfold template engine filters (`avf_builder_active`) to bypass the default classic editor view and load webmasters directly into the visual builder interface.
+- **Configurable Settings UI:** Features a native settings dashboard page under **Settings > Newsletter Template** allowing administrators to dynamically specify which category is assigned to the drafts.
+- **Pixel-Perfect Spacing:** Automatically registers exactly 5 asymmetric layout rows featuring a left-aligned portfolio image skeleton and a right-aligned heading configured with a strict `0px` top-margin override.
+- **Native Localization Support:** Includes complete internationalization integration via translation domain schemas for seamless multilingual menu string rendering.
 
 ## Codebase Architecture
 
-The plugin is structured into two main decoupled PHP files:
+The plugin isolates administrative layouts and translation structures cleanly into specific modules:
 
 ```text
 newsletter-template/
-├── newsletter-template.php  # Main entry point, registers block patterns and enqueues editor assets
-└── admin-settings.php       # Admin dashboard page logic, handles configuration options (Loaded in admin only)
+├── languages/
+│   ├── newletter-automation-nl_NL.po  # Human-readable translation strings (Dutch)
+│   └── newletter-automation-nl_NL.mo  # Compiled binary translation asset (Required for WP)
+├── newsletter-template.php            # Main plugin file, handles boot routines and textdomain initialization
+└── admin-settings.php                 # AJAX routes, Avia shortcode definitions, and backend administration settings
+```
+
+## Compilation of Translation Files
+
+WordPress requires a binary `.mo` file to process translations efficiently. If you make modifications to the `newletter-automation-nl_NL.po` source file on a Mac, compile it via your terminal using the Homebrew `gettext` binary:
+
+```bash
+# 1. Install gettext utilities via brew
+brew install gettext
+
+# 2. Compile the updated .po file into the production-ready binary .mo format
+msgfmt -o languages/newletter-automation-nl_NL.mo languages/newletter-automation-nl_NL.po
 ```
 
 ## Installation
 
-### Via FTP
-1. Download or clone this repository into a directory named `newsletter-template`.
-2. Upload the `newsletter-template` folder to your WordPress installation directory under `/wp-content/plugins/`.
-3. Navigate to the **Plugins** page in your WordPress dashboard and click **Activate** under **Newsletter Template**.
+1. Create a folder named `newsletter-template` under your site's directory path `/wp-content/plugins/`.
+2. Move all core script assets and the compiled `languages/` sub-directory into it.
+3. Access your WordPress Admin dashboard, navigate to **Plugins**, and click **Activate** next to **Newsletter Template**.
 
-### Via WordPress Dashboard Zip Upload
-1. Compress the `newsletter-template` directory into a `.zip` archive.
-2. Go to **Plugins > Add New Plugin** in your WordPress Admin interface.
-3. Click **Upload Plugin**, choose your `.zip` archive, and hit **Install Now**.
-4. Click **Activate Plugin** once the extraction completes.
+## Configuration & Deployment Workflow
 
-## Configuration
-
-1. In your WordPress sidebar, navigate to **Settings > Newsletter Template**.
-2. Select your desired newsletter category from the **Target Category** dropdown menu.
-3. Click **Save Changes**.
-
-## Usage for Webmasters
-
-1. Go to **Posts > Add New**.
-2. In the right-hand sidebar panel under the **Post** tab, look for the **Categories** meta box.
-3. Check the box of your designated newsletter category.
-4. The Gutenberg editor will automatically load the full multi-column newsletter template layout with helpful input placeholders instantly.
-
-## Developer & System Notes
-
-- **WordPress Compatibility:** Tested and safe for WordPress 6.x through the upcoming WordPress 7.14 core editor React datastores.
-- **Dependencies:** Relies entirely on native core WordPress editor assets (`wp-edit-post`, `core/editor`, `core/notices`) and standard block markup. Does not require external libraries or CSS frameworks.
-- **Data Safety:** Uses `wp_localize_script()` to safely pass system configuration metadata into inline editor execution loops without risk of string or URI corruption.
+1. Navigate to the newly activated panel under **Settings > Newsletter Template** (or *Nieuwsbrief Template Instellingen* in Dutch).
+2. Choose your designated newsletter category from the **Target Category** dropdown menu and click **Save Settings**.
+3. Instruct your webmasters to stop clicking *Posts > Add New*. Instead, they can simply choose the new localized sidebar menu item: **Berichten > Nieuwe nieuwsbrief**.
+4. The system will handle the database draft preparation and automatically redirect them to an active visual Avia environment with the entire column framework ready for data insertion.
 
 ## License
 

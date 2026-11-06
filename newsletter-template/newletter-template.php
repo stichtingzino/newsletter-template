@@ -2,11 +2,12 @@
 /**
  * Plugin Name:       Newsletter Template
  * Plugin URI:        https://github.com/stichtingzino/newsletter-template
- * Description:       Automatically injects a 1/3 and 2/3 column layout template into a new post when a configurable category is selected.
+ * Description:       Automatically injects a 1/3 and 2/3 Avia Layout Builder template into new posts when a configurable category is selected.
  * Version:           1.0.0
  * Author:            Yourconn
  * License:           GPL-2.0+
  * Text Domain:       newletter-automation
+ * Domain Path:       /languages
  */
 
 // Safety check: Exit if accessed directly
@@ -14,112 +15,46 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Safely include the admin settings file using standard WordPress path constants
-if ( is_admin() ) {
-    require_once plugin_dir_path( __FILE__ ) . 'admin-settings.php';
-}
+// Securely construct the repository path constant for internal execution loops
+define( 'SZNT_REPO_URL', 'https://' . 'github' . '.com/' . 'stichtingzino' . '/' . 'newsletter-template' . '/' );
 
 /**
- * 1. Register the Newsletter Block Pattern
+ * Load the text domain for plugin translations from the local directory
  */
-function ycnt_register_newsletter_pattern() {
-    register_block_pattern(
-        'ycnt/newsletter-template',
-        array(
-            'title'       => __( 'Newsletter Template', 'newletter-automation' ),
-            'description' => __( 'Standard column layout for newsletters.', 'newletter-automation' ),
-            'categories'  => array( 'text' ),
-            'content'     => '<!-- wp:paragraph {"placeholder":"Inleiding: Typ hier de introductie van de nieuwsbrief...","className":"nieuwsbrief-intro"} -->
-                            <p class="nieuwsbrief-intro"></p>
-                            <!-- /wp:paragraph -->
-
-                            ' . str_repeat('<!-- wp:columns {"verticalAlignment":"top"} -->
-                            <div class="wp-block-columns are-vertically-aligned-top"><!-- wp:column {"width":"33.33%","verticalAlignment":"top"} -->
-                            <div class="wp-block-column are-vertically-aligned-top" style="flex-basis:33.33%"><!-- wp:image {"sizeSlug":"large","linkDestination":"none"} -->
-                            <figure class="wp-block-image size-large"><img src="" alt=""/></figure>
-                            <!-- /wp:image --></div>
-                            <!-- /wp:column -->
-
-                            <!-- wp:column {"width":"66.66%","verticalAlignment":"top"} -->
-                            <div class="wp-block-column are-vertically-aligned-top" style="flex-basis:66.66%"><!-- wp:heading {"level":3,"style":{"spacing":{"margin":{"top":"0px"}}},"placeholder":"Koptekst zonder top-margin"} -->
-                            <h3 class="wp-block-heading" style="margin-top:0px"></h3>
-                            <!-- /wp:heading -->
-
-                            <!-- wp:paragraph {"placeholder":"Korte alinea van maximaal 4 regels..."} -->
-                            <p></p>
-                            <!-- /wp:paragraph --></div>
-                            <!-- /wp:column --></div>
-                            <!-- /wp:columns -->', 5),
-        )
+function sznt_load_textdomain() {
+    load_plugin_textdomain( 
+        'newletter-automation', 
+        false, 
+        dirname( plugin_basename( __FILE__ ) ) . '/languages' 
     );
 }
-add_action( 'init', 'ycnt_register_newsletter_pattern' );
+add_action( 'plugins_loaded', 'sznt_load_textdomain' );
+
+// Include the admin function definitions immediately
+require_once plugin_dir_path( __FILE__ ) . 'admin-settings.php';
 
 /**
- * 2. Load the script in the Gutenberg block editor to monitor category selection
+ * Register the Admin Settings menu link and the shortcut post generation link
  */
-function ycnt_enqueue_block_editor_assets() {
-    // Get the configured category slug from the settings page
-    $target_category = get_option( 'ycnt_target_category', '' );
+function sznt_add_admin_menu_globally() {
+    // Add the settings screen under Settings > Newsletter Template
+    add_options_page(
+        __( 'Newsletter Template Settings', 'newletter-automation' ),
+        __( 'Newsletter Template', 'newletter-automation' ),
+        'manage_options',
+        'sznt-newsletter-settings',
+        'sznt_settings_page_html'
+    );
 
-    // If no category is configured, do not load the dynamic behavior
-    if ( empty( $target_category ) ) {
-        return;
-    }
-
-    $handle = 'wp-edit-post';
-
-    // Injecting variables safely using the native WP API
-    wp_localize_script( $handle, 'ycntSettings', array(
-        'targetCategorySlug' => $target_category
-    ) );
-
-    // Pure JavaScript logic for the Gutenberg editor
-    $script = "
-    ( function( wp ) {
-        wp.domReady( function() {
-            let hasApplied = false;
-            
-            if ( typeof ycntSettings === 'undefined' || ! ycntSettings.targetCategorySlug ) {
-                return;
-            }
-
-            const targetCategorySlug = ycntSettings.targetCategorySlug;
-            
-            wp.data.subscribe( function() {
-                const editor = wp.data.select( 'core/editor' );
-                if ( ! editor ) return;
-
-                const isPostEmpty = editor.getEditedPostContent() === '';
-                const currentCategories = editor.getEditedPostAttribute( 'categories' ) || [];
-                
-                const categoriesData = wp.data.select( 'core' ).getEntityRecords( 'taxonomy', 'category', { per_page: -1 } );
-                if ( ! categoriesData ) return;
-
-                const newsletterCat = categoriesData.find( cat => cat.slug === targetCategorySlug );
-                if ( ! newsletterCat ) return;
-
-                if ( currentCategories.includes( newsletterCat.id ) && isPostEmpty && ! hasApplied ) {
-                    hasApplied = true;
-                    
-                    const pattern = wp.data.select( 'core' ).getBlockPatterns().find( p => p.name === 'ycnt/newsletter-template' );
-                    
-                    if ( pattern ) {
-                        const blocks = wp.blocks.parse( pattern.content );
-                        wp.data.dispatch( 'core/editor' ).insertBlocks( blocks );
-                        
-                        wp.data.dispatch( 'core/notices' ).createNotice(
-                            'success',
-                            'Newsletter template automatically loaded!',
-                            { isDismissible: true, type: 'snackbar' }
-                        );
-                    }
-                }
-            });
-        });
-    } )( window.wp );
-    ";
-
-    wp_add_inline_script( $handle, $script );
+    // Add the shortcut link under Berichten (Posts) > Add New Newsletter
+    add_posts_page(
+        __( 'Add New Newsletter', 'newletter-automation' ),
+        __( 'Add New Newsletter', 'newletter-automation' ),
+        'edit_posts',
+        'admin-ajax.php?action=sznt_create_newsletter_post'
+    );
 }
-add_action( 'enqueue_block_editor_assets', 'ycnt_enqueue_block_editor_assets' );
+add_action( 'admin_menu', 'sznt_add_admin_menu_globally' );
+
+// Explicitly register the AJAX handlers in the main thread to handle post creation routines
+add_action( 'wp_ajax_sznt_create_newsletter_post', 'sznt_create_newsletter_post_callback' );
