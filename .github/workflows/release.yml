@@ -1,0 +1,50 @@
+name: Generate WordPress Plugin Zip on Main Merge
+
+on:
+  push:
+    branches:
+      - main  # Start only on a push or merge to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to modify files and create releases
+    env:
+          PLUGIN_SLUG: "newsletter-template"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Create clean production directory & Zip
+        run: |
+          # 1. Create a temporary build map
+          mkdir -p build/${{ env.PLUGIN_SLUG }}
+          
+          # 2. Copy the recently updated plugin content to the build map
+          rsync -rc --exclude '.git*' --exclude 'build' ./${{ env.PLUGIN_SLUG }}/ build/${{ env.PLUGIN_SLUG }}/
+          
+          # 3. Go to the build map and zip the plugin
+          cd build
+          zip -r ../${{ env.PLUGIN_SLUG }}.zip ${{ env.PLUGIN_SLUG }}
+          cd ..
+
+      - name: Upload or Update Release Asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="v$(cat VERSION | tr -d '[:space:]')"
+          
+          # Check if the release already exists on GitHub
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists. Asset will be updated..."
+            # Upload the new zip file to the existing release and overwrite the old file
+            gh release upload "$TAG_NAME" ${{ env.PLUGIN_SLUG }}.zip --clobber
+          else
+            echo "Release $TAG_NAME does not exist. New release will be created..."
+            # Create a new release including the zip file
+            gh release create "$TAG_NAME" ${{ env.PLUGIN_SLUG }}.zip \
+              --title "Release $TAG_NAME" \
+              --notes "Automated production release for version $TAG_NAME."
+          fi
